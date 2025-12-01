@@ -235,28 +235,19 @@ export default function TuitionCalculator() {
     let infoClass = 'discount-info';
     
     if (discount.isChoice) {
-      const programName = isMilwaukee ? 'Milwaukee Parental Choice Program (MPCP)' : 'Wisconsin Parental Choice Program (WPCP)';
-      infoText = `<strong>Excellent news!</strong> Based on your income and household size, your family qualifies for the ${programName}. <strong>Students awarded a Choice scholarship pay no tuition.</strong> You will need to apply for the Choice program separately and acceptance is subject to available seats and income verification.`;
+      const programName = isMilwaukee ? 'Milwaukee Parental Choice Program' : 'Wisconsin Parental Choice Program';
+      infoText = `<strong>Qualified for ${programName}.</strong> Students awarded a Choice scholarship pay no tuition. Apply separately; acceptance subject to seats and verification.`;
       infoClass = 'choice-program';
     } else if (discount.percentage > 0 || siblingDiscount || campus === 'north') {
       let discountText = '';
-      if (discount.percentage > 0) {
-        discountText = `<strong>You likely qualify for a ${discount.percentage}% financial aid award</strong> based on your household size and income level.`;
-      }
-      if (siblingDiscount) {
-        const siblingText = discount.percentage > 0 ? ' Additionally, you qualify for a <strong>10% sibling discount</strong> since you have other children enrolling at St. Augustine Preparatory Academy.' : '<strong>You qualify for a 10% sibling discount</strong> since you have other children enrolling at St. Augustine Preparatory Academy.';
-        discountText += siblingText;
-      }
-      if (campus === 'north') {
-        const foundingText = (discount.percentage > 0 || siblingDiscount) ? ' Your family also receives the <strong>10% Founding Families discount</strong> automatically included with Aug Prep North for our inaugural year.' : '<strong>Your family receives the 10% Founding Families discount</strong> automatically included with Aug Prep North for our inaugural year.';
-        discountText += foundingText;
-      }
-      discountText += ' This is an estimate and actual discount may vary based on income verification.<br><br>';
-      discountText += '<strong>Aug Prep is committed to making a high-quality, Christ-centered education accessible to families.</strong> Additional grants and financial assistance may be available beyond what is shown above. <strong><a href="https://www.augprep.org/apps/pages/admissions/connect" target="_blank">Complete this short form</a></strong>, and a member of our team will reach out to discuss personalized options and answer any questions you may have.';
+      if (discount.percentage > 0) discountText = `<strong>${discount.percentage}% Financial Aid Award</strong> based on income.`;
+      if (siblingDiscount) discountText += (discountText ? '<br>' : '') + '<strong>10% Sibling Discount</strong> applied.';
+      if (campus === 'north') discountText += (discountText ? '<br>' : '') + '<strong>10% Founding Families Discount</strong> applied.';
+      
+      discountText += '<br><br><strong><a href="https://www.augprep.org/apps/pages/admissions/connect" target="_blank">Contact Admissions</a></strong> for personalized options.';
       infoText = discountText;
     } else {
-      infoText = 'Based on your estimated household income and size, you would likely qualify for our standard tuition rate. This is an estimate and actual tuition may vary.<br><br>';
-      infoText += '<strong>Aug Prep is committed to making a high-quality, Christ-centered education accessible to families.</strong> Additional grants and financial assistance may be available beyond what is shown above. <strong><a href="https://www.augprep.org/apps/pages/admissions/connect" target="_blank">Complete this short form</a></strong>, and a member of our team will reach out to discuss personalized options and answer any questions you may have.';
+      infoText = 'Standard tuition rate applies based on estimated income.<br><br><strong><a href="https://www.augprep.org/apps/pages/admissions/connect" target="_blank">Contact Admissions</a></strong> for personalized options.';
     }
 
     const deposit = 500;
@@ -299,15 +290,6 @@ export default function TuitionCalculator() {
 
   return (
     <div className="calculator-container">
-      <div className="header">
-        <h1>Tuition Estimator</h1>
-        <p>Estimate your family&apos;s tuition cost based on income and residency</p>
-        <p><strong>2026-2027 School Year</strong></p>
-        <div className="disclaimer">
-          <strong>Important:</strong> This is an estimate only and not guaranteed. Actual tuition may vary based on verification of income, family size, and program eligibility. Please contact our office for final tuition determination.
-        </div>
-      </div>
-      
       <div className="form-container">
         <div className="form-grid">
           <div className="form-group">
@@ -409,87 +391,112 @@ export default function TuitionCalculator() {
         )}
 
         {showResults && (
-          <div className="results show" id="results">
-            <div className="result-row">
-              <span className="result-label">Base Tuition Rate:</span>
-              <span className="result-value" style={results.isChoice ? {textDecoration: 'line-through', opacity: 0.6} : {}}>
-                ${results.baseTuition.toLocaleString()}
-              </span>
-            </div>
-            {!results.isChoice && results.showFoundingFamilies && (
-              <div className="result-row">
-                <span className="result-label">Founding Families Discount (10%):</span>
-                <span className="result-value">${results.foundingFamiliesAmount.toLocaleString()}</span>
-              </div>
-            )}
-            {!results.isChoice && results.showSiblingDiscount && (
-              <div className="result-row">
-                <span className="result-label">Sibling Discount (10%):</span>
-                <span className="result-value">${results.siblingDiscountAmount.toLocaleString()}</span>
-              </div>
-            )}
-            {!results.isChoice && results.showFinancialAid && (
-              <>
-                <div className="result-row">
-                  <span className="result-label">Financial Aid Award Percentage:</span>
-                  <span className="result-value">{results.financialAidPercentage}%</span>
+          <div className="results-container show" id="results">
+            <div className="results-grid">
+              {/* Left Column: Tuition Breakdown */}
+              <div className="results-column tuition-column">
+                <div className="column-header">
+                  <h3>Estimated Tuition</h3>
                 </div>
-                <div className="result-row">
-                  <span className="result-label">Financial Aid Award:</span>
-                  <span className="result-value">${results.financialAidAmount.toLocaleString()}</span>
+                
+                <div className="final-price-section">
+                  <div className="final-price-label">{results.finalTuitionLabel}</div>
+                  <div className="final-price-large">
+                    {results.isChoice ? 'No Tuition Cost*' : `$${results.finalTuition.toLocaleString()}`}
+                  </div>
+                  {results.isChoice && <div className="choice-subtitle">*Choice Scholarship Awarded</div>}
                 </div>
-              </>
-            )}
-            <div className="result-row final-row">
-              <span className="result-label">{results.finalTuitionLabel}</span>
-              <span className="result-value">
-                {results.isChoice 
-                  ? 'You Qualify for the Choice Program - No Tuition Charged to Students Awarded a Choice Scholarship'
-                  : `$${results.finalTuition.toLocaleString()}`
-                }
-              </span>
-            </div>
-            <div className={results.infoClass} dangerouslySetInnerHTML={{ __html: results.infoText }} />
-            <div className="disclaimer-results">
-              <strong>Disclaimer:</strong> This estimate is based on the information provided and current income thresholds. Final tuition determination requires income verification and may differ from this estimate. Choice program eligibility is subject to application approval and available seats.
-            </div>
-          </div>
-        )}
 
-        {showPaymentPlans && (
-          <div className="payment-plans show">
-            <h3>Payment Plan Options</h3>
-            <div className="deposit-info">
-              <strong>Enrollment Deposit:</strong> $500 (secures your child&apos;s seat and is applied to tuition)
+                {!results.isChoice && (
+                  <div className="compact-breakdown">
+                    <div className="breakdown-item">
+                      <span>Base Tuition</span>
+                      <span>${results.baseTuition.toLocaleString()}</span>
+                    </div>
+                    {results.showFoundingFamilies && (
+                      <div className="breakdown-item discount">
+                        <span>Founding Families Discount</span>
+                        <span>-${results.foundingFamiliesAmount.toLocaleString()}</span>
+                      </div>
+                    )}
+                    {results.showSiblingDiscount && (
+                      <div className="breakdown-item discount">
+                        <span>Sibling Discount</span>
+                        <span>-${results.siblingDiscountAmount.toLocaleString()}</span>
+                      </div>
+                    )}
+                    {results.showFinancialAid && (
+                      <div className="breakdown-item discount">
+                        <span>Financial Aid ({results.financialAidPercentage}%)</span>
+                        <span>-${results.financialAidAmount.toLocaleString()}</span>
+                      </div>
+                    )}
+                    <div className="breakdown-divider"></div>
+                    <div className="breakdown-item total">
+                      <span>Net Tuition</span>
+                      <span>${results.finalTuition.toLocaleString()}</span>
+                    </div>
+                  </div>
+                )}
+                
+                <div className={results.infoClass} dangerouslySetInnerHTML={{ __html: results.infoText }} />
+              </div>
+
+              {/* Right Column: Payment Options */}
+              {showPaymentPlans && (
+                <div className="results-column payment-column">
+                  <div className="column-header">
+                    <h3>Payment Options</h3>
+                  </div>
+                  
+                  <div className="deposit-banner">
+                    Enrollment Deposit: $500 (Applied to tuition)
+                  </div>
+
+                  <div className="payment-list">
+                    <div className="payment-row">
+                      <div className="payment-info">
+                        <span className="payment-type">Pay in Full</span>
+                        <span className="payment-sub">Due June 15th</span>
+                      </div>
+                      <div className="payment-cost">
+                        <span className="cost-amount">${results.fullPayment.toLocaleString()}</span>
+                        <span className="cost-note">Includes 5% discount</span>
+                      </div>
+                    </div>
+
+                    <div className="payment-row">
+                      <div className="payment-info">
+                        <span className="payment-type">Quarterly</span>
+                        <span className="payment-sub">Jun, Sep, Dec, Mar</span>
+                      </div>
+                      <div className="payment-cost">
+                        <span className="cost-amount">${results.quarterlyPayment.toLocaleString()}</span>
+                        <span className="cost-note">/ quarter (4 payments)</span>
+                      </div>
+                    </div>
+
+                    <div className="payment-row">
+                      <div className="payment-info">
+                        <span className="payment-type">Monthly</span>
+                        <span className="payment-sub">Jun - Mar (15th)</span>
+                      </div>
+                      <div className="payment-cost">
+                        <span className="cost-amount">${results.monthlyPayment.toLocaleString()}</span>
+                        <span className="cost-note">/ month (10 payments)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="contact-mini">
+                    <p>Questions? <a href="mailto:admissions@augprep.org">Contact Admissions</a></p>
+                  </div>
+                </div>
+              )}
             </div>
             
-            <div className="payment-options">
-              <div className="payment-option">
-                <div className="payment-title">Pay in Full</div>
-                <div className="payment-subtitle">(5% discount included)</div>
-                <div className="payment-amount">${results.fullPayment.toLocaleString()}</div>
-                <div className="payment-details">Due:&nbsp;June&nbsp;15th</div>
-              </div>
-              
-              <div className="payment-option">
-                <div className="payment-title">Quarterly Payments</div>
-                <div className="payment-amount">${results.quarterlyPayment.toLocaleString()} × 4</div>
-                <div className="payment-details">Due: June 15th, September 15th, December 15th, March 15th</div>
-              </div>
-              
-              <div className="payment-option">
-                <div className="payment-title">Monthly Payments</div>
-                <div className="payment-amount">${results.monthlyPayment.toLocaleString()} × 10</div>
-                <div className="payment-details">Due: 15th of each month from June through March</div>
-              </div>
-              
-              <div className="payment-option contact-option">
-                <div className="payment-title">Contact Admissions</div>
-                <div className="contact-text">Additional grants and financial assistance may be available beyond what is shown above. Questions about payment plans, additional assistance, or need more information?</div>
-                <div className="contact-email">
-                  <a href="mailto:admissions@augprep.org">admissions@augprep.org</a>
-                </div>
-              </div>
+            <div className="disclaimer-footer">
+              Estimate only. Final tuition subject to verification. Choice eligibility subject to application approval.
             </div>
           </div>
         )}
@@ -497,3 +504,4 @@ export default function TuitionCalculator() {
     </div>
   );
 }
+
