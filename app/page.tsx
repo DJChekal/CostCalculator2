@@ -5,14 +5,14 @@ import { useState, useEffect } from 'react';
 // Define tuition rates by campus and grade tier
 const tuitionRates = {
   north: {
-    'k4-5': 13000,
-    '6-8': 15000,
-    '9-12': 18000
+    'k4-5': 13400,
+    '6-8': 15400,
+    '9-12': 18500
   },
   south: {
-    'k4-5': 11000,
-    '6-8': 13000,
-    '9-12': 15000
+    'k4-5': 11250,
+    '6-8': 13400,
+    '9-12': 15400
   }
 };
 
