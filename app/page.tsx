@@ -163,7 +163,7 @@ export default function TuitionCalculator() {
   }, [campus, gradeLevel]);
 
   const checkGradeAvailability = () => {
-    const phasedGrades = ['7th', '8th', '10th', '11th', '12th'];
+    const phasedGrades = ['8th', '11th', '12th'];
     
     if (campus === 'north' && phasedGrades.includes(gradeLevel)) {
       setShowGradeWarning(true);
@@ -379,7 +379,7 @@ export default function TuitionCalculator() {
 
         {showGradeWarning && (
           <div className="grade-warning">
-            <strong>Note:</strong> This grade will be phased in over the 2027-28, 2028-29, and 2029-30 school years, but will not be offered at Aug Prep North in the 2026-27 school year.
+            <strong>Note:</strong> This grade will be phased in over the 2028-29, and 2029-30 school years, but will not be offered at Aug Prep North in the 2027-28 school year.
           </div>
         )}
 
