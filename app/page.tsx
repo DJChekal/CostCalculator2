@@ -124,6 +124,83 @@ function checkMarriageAdjustment(isMilwaukee: boolean, householdSize: number, in
   return income > choiceLimit && income <= (choiceLimit + 7000);
 }
 
+// ---------------------------------------------------------------------------
+// URL parameter prefill (e.g. links from the Halda inquiry form)
+// Keys are matched case-insensitively, ignoring "_", "-", "." and spaces,
+// so "household_size", "householdSize" and "Household-Size" all work.
+// ---------------------------------------------------------------------------
+const paramAliases = {
+  campus: ['campus', 'school', 'location', 'campuschoice'],
+  milwaukee: ['milwaukee', 'mke', 'milwaukeeresident', 'cityofmilwaukee', 'liveinmilwaukee', 'resident', 'residency'],
+  householdSize: ['householdsize', 'household', 'familysize', 'hhsize', 'size'],
+  income: ['income', 'annualincome', 'householdincome', 'annualhouseholdincome'],
+  grade: ['grade', 'gradelevel', 'enteringgrade', 'studentgrade', 'applyinggrade'],
+  sibling: ['sibling', 'siblings', 'siblingdiscount', 'siblingsenrolling', 'othersiblings'],
+  calculate: ['calculate', 'autocalculate', 'calc']
+};
+
+function normalizeKey(key: string): string {
+  return key.toLowerCase().replace(/[\s_\-.]/g, '');
+}
+
+function getParam(params: URLSearchParams, field: keyof typeof paramAliases): string | null {
+  const aliases = paramAliases[field];
+  for (const [key, value] of Array.from(params.entries())) {
+    if (aliases.includes(normalizeKey(key)) && value.trim() !== '') {
+      return value.trim();
+    }
+  }
+  return null;
+}
+
+function parseYesNo(value: string | null): 'yes' | 'no' | null {
+  if (value === null) return null;
+  const v = value.toLowerCase().trim();
+  if (['yes', 'y', 'true', '1', 'on', 'checked'].includes(v)) return 'yes';
+  if (['no', 'n', 'false', '0', 'off', 'unchecked'].includes(v)) return 'no';
+  return null;
+}
+
+function parseCampus(value: string | null): string | null {
+  if (value === null) return null;
+  const v = value.toLowerCase();
+  if (v.includes('north')) return 'north';
+  if (v.includes('south')) return 'south';
+  return null;
+}
+
+function parseHouseholdSize(value: string | null): string | null {
+  if (value === null) return null;
+  const match = value.match(/\d+/);
+  if (!match) return null;
+  const size = parseInt(match[0], 10);
+  return size >= 1 && size <= 10 ? String(size) : null;
+}
+
+function parseIncome(value: string | null): string | null {
+  if (value === null) return null;
+  const cleaned = value.replace(/[^0-9.]/g, '');
+  const income = parseFloat(cleaned);
+  if (cleaned === '' || isNaN(income) || income < 0) return null;
+  return String(Math.round(income));
+}
+
+function parseGrade(value: string | null): string | null {
+  if (value === null) return null;
+  const v = value.toLowerCase().replace(/grade|\(.*\)|[\s\-_.]/g, '');
+  if (['k4', '4k', 'prek', 'prek4', 'pk', 'pk4', '4yearoldkindergarten'].includes(v)) return 'k4';
+  if (['k5', '5k', 'k', 'kindergarten', 'kg', '5yearoldkindergarten'].includes(v)) return 'k5';
+  const match = v.match(/^(\d{1,2})(st|nd|rd|th)?$/);
+  if (match) {
+    const n = parseInt(match[1], 10);
+    if (n >= 1 && n <= 12) {
+      const suffix = n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th';
+      return `${n}${suffix}`;
+    }
+  }
+  return null;
+}
+
 export default function TuitionCalculator() {
   const [campus, setCampus] = useState('');
   const [milwaukee, setMilwaukee] = useState('');
@@ -157,6 +234,41 @@ export default function TuitionCalculator() {
     quarterlyPayment: 0,
     monthlyPayment: 0
   });
+
+  const [autoCalculate, setAutoCalculate] = useState(false);
+
+  // Pre-populate fields from URL parameters so families don't re-enter
+  // information they already provided in the Halda form.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    const campusParam = parseCampus(getParam(params, 'campus'));
+    const milwaukeeParam = parseYesNo(getParam(params, 'milwaukee'));
+    const householdParam = parseHouseholdSize(getParam(params, 'householdSize'));
+    const incomeParam = parseIncome(getParam(params, 'income'));
+    const gradeParam = parseGrade(getParam(params, 'grade'));
+    const siblingParam = parseYesNo(getParam(params, 'sibling'));
+
+    if (campusParam) setCampus(campusParam);
+    if (milwaukeeParam) setMilwaukee(milwaukeeParam);
+    if (householdParam) setHouseholdSize(householdParam);
+    if (incomeParam) setAnnualIncome(incomeParam);
+    if (gradeParam) setGradeLevel(gradeParam);
+    if (siblingParam) setSiblingDiscount(siblingParam === 'yes');
+
+    // Optionally show results right away when every required field is present
+    const allProvided = campusParam && milwaukeeParam && householdParam && incomeParam && gradeParam;
+    if (allProvided && parseYesNo(getParam(params, 'calculate')) === 'yes') {
+      setAutoCalculate(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (autoCalculate) {
+      setAutoCalculate(false);
+      calculateTuition();
+    }
+  }, [autoCalculate]);
 
   useEffect(() => {
     checkGradeAvailability();
