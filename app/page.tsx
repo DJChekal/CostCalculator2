@@ -516,7 +516,7 @@ export default function TuitionCalculator() {
                   <div className="final-price-large">
                     {results.isChoice ? 'No Tuition Cost*' : `$${results.finalTuition.toLocaleString()}`}
                   </div>
-                  {results.isChoice && <div className="choice-subtitle">*Choice Scholarship Awarded</div>}
+                  {results.isChoice && <div className="choice-subtitle">*If a Choice Scholarship Is Awarded</div>}
                 </div>
 
                 {!results.isChoice && (
